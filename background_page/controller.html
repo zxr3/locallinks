@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8">
+    <title>Background controller of LocalLinks extension</title>
+
+    <script type="text/javascript" src="actions.js"></script>
+    <script type="text/javascript">
+      var target_tab_to_action_mapping = {
+        'current_tab':        openLinkInCurrentTab,
+        'new_background_tab': openLinkInNewBackgroundTab
+      };
+
+      chrome.extension.onRequest.addListener(function(request) {
+        var openLink = target_tab_to_action_mapping[request.target_tab];
+        openLink(request.url);
+      });
+    </script>
+  </head>
+</html>
+
