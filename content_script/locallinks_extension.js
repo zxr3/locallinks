@@ -33,16 +33,54 @@ function handleMouseoutOnLink(event)
   element_of_last_mousedown = null;
 }
 
-var clicked_button_to_target_tab_mapping = {
-  1: 'current_tab',       // left button
-  2: 'new_background_tab' // middle button
+/* 10.07.2010 NB!*/
+/* $.getScript should work after bug http://crbug.com/41024 will be fixed */
+//$.getScript(chrome.extension.getURL('background_page/tab_kind.js'));
+var CURRENT_TAB        = 'current_tab';
+var NEW_FOREGROUND_TAB = 'new_foreground_tab';
+var NEW_BACKGROUND_TAB = 'new_background_tab';
+
+function _isTargetBlank(el)
+{
+  var element_has_target_blank = (el.target && el.target == '_blank');
+
+  // Document can have many <base target="<smth>" /> elements and each
+  // consequent overrides previous.
+  var base_target_blank = false;
+  $('head > base'). each(function(){
+    // Check only '<base ... target='<smth>' />'.
+    if (this.target)
+    {
+      // Override previous value.
+      base_target_blank = (this.target == '_blank');
+    }
+  });
+
+  return (element_has_target_blank || base_target_blank);
 }
 
 function handleMouseupOnLink(event)
 {
   if (element_of_last_mousedown != this) return;
 
-  var target_tab = clicked_button_to_target_tab_mapping[event.which];
+  var target_tab = null;
+  switch (event.which)
+  {
+    case 1: // left button
+      if (_isTargetBlank(this))
+      {
+        target_tab = NEW_FOREGROUND_TAB;
+      }
+      else
+      {
+        target_tab = CURRENT_TAB;
+      }
+      break;
+    case 2: // middle button
+      target_tab = NEW_BACKGROUND_TAB;
+      break;
+  }
+
   openUrl(target_tab, this.href);
 }
 

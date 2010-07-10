@@ -1,34 +1,45 @@
 function openLinkInCurrentTab(url)
 {
-  _withCurrentTabOfTopmostWindowDo(function(base_tab) {
-    _emulateNativeOpenLinkInCurrentTab(url, base_tab);
+  chrome.tabs.getSelected(null, function(selected_tab) {
+    chrome.tabs.update(selected_tab.id, {url: url});
+  });
+}
+
+function openLinkInNewForegroundTab(url)
+{
+  chrome.tabs.getSelected(null, function(selected_tab) {
+    chrome.tabs.create(
+      _propertiesForNewTab(url, selected_tab, {selected: true})
+    );
   });
 }
 
 function openLinkInNewBackgroundTab(url)
 {
-  _withCurrentTabOfTopmostWindowDo(function(base_tab) {
-    _emulateNativeOpenLinkInNewBackgroundTab(url, base_tab);
+  chrome.tabs.getSelected(null, function(selected_tab) {
+    chrome.tabs.create(
+      _propertiesForNewTab(url, selected_tab, {selected: false})
+    );
   });
 }
 
-function _withCurrentTabOfTopmostWindowDo(action_callback)
+function _propertiesForNewTab(
+  url,
+  base_tab,
+  overriding_properties // optional
+)
 {
-  chrome.tabs.getSelected(null, action_callback);
-}
+  if (typeof overriding_properties === 'undefined')
+  {
+    overriding_properties = {};
+  }
 
-function _emulateNativeOpenLinkInCurrentTab(url, base_tab)
-{
-  chrome.tabs.update(base_tab.id, {url: url});
-}
-
-function _emulateNativeOpenLinkInNewBackgroundTab(url, base_tab)
-{
-  chrome.tabs.create({
+  // I want to emulate native Chrome behavior.
+  // So I will open new tab adjacent to base.
+  return $.extend(true, // deep copy
+  {
     windowId: base_tab.windowId,
     index:    base_tab.index + 1,
     url:      url,
-    selected: false
-  });
+  }, overriding_properties);
 }
-
